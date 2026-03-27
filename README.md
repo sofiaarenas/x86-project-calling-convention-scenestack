@@ -63,6 +63,13 @@ Behind the scenes, this happens:
 
 So the stack grows.
 
+The actual CPU instructions that run when a function starts:
+push rbp        ; save the caller's frame pointer (so we can restore it later)
+mov  rbp, rsp   ; RBP now marks the top of OUR frame
+sub  rsp, 32    ; carve out space for local variables
+
+🎬 Each new scene gets its own director's notebook. push rbp saves the previous director's notebook. mov rbp, rsp opens a fresh one for this scene.
+
 ---
 
 ### 🔙 Return
@@ -76,6 +83,12 @@ What happens:
 3. Program jumps back to the saved return address
 
 So the stack shrinks.
+
+The actual CPU instructions that run when a function ends:
+leave           ; shorthand for: mov rsp, rbp  +  pop rbp
+ret             ; pops the return address off the stack → jumps back to caller
+
+🎬 leave closes this scene's notebook and hands the old one back. ret reads the sticky note ("go back to Scene 5, Line 42") and jumps there.
 
 ---
 
