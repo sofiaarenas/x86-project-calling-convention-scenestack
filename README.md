@@ -64,6 +64,7 @@ Behind the scenes, this happens:
 So the stack grows.
 
 The actual CPU instructions that run when a function starts:
+
 push rbp        ; save the caller's frame pointer (so we can restore it later)
 mov  rbp, rsp   ; RBP now marks the top of OUR frame
 sub  rsp, 32    ; carve out space for local variables
@@ -85,6 +86,7 @@ What happens:
 So the stack shrinks.
 
 The actual CPU instructions that run when a function ends:
+
 leave           ; shorthand for: mov rsp, rbp  +  pop rbp
 ret             ; pops the return address off the stack → jumps back to caller
 
