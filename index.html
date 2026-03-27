@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>🎬 Scene Stack</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'DM Mono', monospace;
+  background: #1c2333;
+  color: #e8eaf0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 36px 16px 60px;
+}
+h1 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 3.2rem;
+  letter-spacing: 3px;
+  color: #f5c842;
+  margin-bottom: 4px;
+}
+.subtitle { font-size: 0.75rem; color: #7a859e; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 28px; }
+.controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: center; margin-bottom: 28px; }
+input[type="text"] {
+  font-family: 'DM Mono', monospace; font-size: 0.8rem;
+  padding: 9px 14px; background: #111827; border: 1px solid #2d3748;
+  border-radius: 6px; color: #e8eaf0; width: 200px; outline: none; transition: border-color 0.15s;
+}
+input[type="text"]:focus { border-color: #f5c842; }
+input[type="text"]::placeholder { color: #4a5568; }
+.btn {
+  font-family: 'DM Mono', monospace; font-size: 0.78rem; font-weight: 500;
+  padding: 9px 16px; border: none; border-radius: 6px; cursor: pointer;
+  transition: filter 0.15s, transform 0.1s; letter-spacing: 0.5px;
+  background: #22c55e; color: #052e16;
+}
+.btn:active { transform: scale(0.95); }
+.btn:hover { filter: brightness(1.15); }
+.rip-wrap { display: flex; align-items: center; gap: 6px; margin-left: 4px; }
+.rip-arrow { font-size: 1.1rem; color: #7a859e; }
+.rip-badge { background: #3b82f6; color: #fff; font-size: 0.8rem; font-weight: 500; padding: 7px 14px; border-radius: 6px; letter-spacing: 1px; }
+.stage { display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap; justify-content: center; width: 100%; max-width: 860px; }
+.frame-col { display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 160px; }
+.frame-label { font-size: 0.72rem; letter-spacing: 1px; color: #9ca3af; font-style: italic; margin-bottom: 2px; }
+.frame-box {
+  border: 1.5px dashed #3d4f6e; border-radius: 10px; padding: 10px; min-height: 80px; width: 100%;
+  display: flex; flex-direction: column-reverse; gap: 6px; background: #111827;
+}
+.frame-col.inactive .frame-box { opacity: 0.35; }
+.frame-col.inactive .frame-label { color: #4a5568; }
+.item {
+  padding: 10px 14px; border-radius: 8px; font-size: 0.78rem; font-weight: 500;
+  text-align: center; animation: dropIn 0.3s ease; cursor: default;
+}
+@keyframes dropIn { from { opacity:0; transform:translateY(-10px); } to { opacity:1; transform:translateY(0); } }
+.item-prop  { background: #f59e0b; color: #1c1008; }
+.item-ret   { background: #ef4444; color: #1c0000; }
+.item-saved { background: #a855f7; color: #0e0014; }
+.info-bar {
+  margin-top: 24px; width: 100%; max-width: 860px; background: #111827;
+  border-left: 3px solid #f5c842; border-radius: 0 8px 8px 0;
+  padding: 12px 16px; font-size: 0.78rem; color: #cbd5e1; line-height: 1.6; min-height: 44px; transition: opacity 0.2s;
+}
+.usage { margin-top: 28px; width: 100%; max-width: 860px; background: #111827; border-radius: 10px; padding: 20px 24px; font-size: 0.78rem; color: #94a3b8; line-height: 2.1; }
+.key { display: inline-block; min-width: 60px; color: #f5c842; font-weight: 500; }
+.legend { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 16px; padding-top: 14px; border-top: 1px solid #1e2a3a; }
+.leg { display: flex; align-items: center; gap: 7px; font-size: 0.72rem; color: #7a859e; }
+.swatch { width: 14px; height: 14px; border-radius: 4px; flex-shrink: 0; }
+</style>
+</head>
+<body>
+
+<h1>🎬 Scene Stack</h1>
+<p class="subtitle">Calling conventions — movie set edition</p>
+
+<div class="controls">
+  <input type="text" id="inp" placeholder="Enter a prop or scene name" maxlength="26">
+  <button class="btn" onclick="doPush()">Push</button>
+  <button class="btn" onclick="doPop()">Pop</button>
+  <button class="btn" onclick="doClear()">Clear</button>
+  <button class="btn" onclick="doCall()">Call</button>
+  <button class="btn" onclick="doRet()">Ret</button>
+  <div class="rip-wrap">
+    <span class="rip-arrow">↑</span>
+    <div class="rip-badge" id="rip">RIP</div>
+  </div>
+</div>
+
+<div class="stage" id="stage"></div>
+<div class="info-bar" id="info">Push a prop, or hit Call to start a new scene (new stack frame).</div>
+
+<div class="usage">
+  <div><span class="key">Push</span> Add a prop (argument or local variable) to the active scene's stack.</div>
+  <div><span class="key">Pop</span> Remove the top prop from the active scene.</div>
+  <div><span class="key">Clear</span> Clear all props from the active scene.</div>
+  <div><span class="key">Call</span> Save the return address + old frame pointer, then open a new scene (new stack frame).</div>
+  <div><span class="key">Ret</span> Close the current scene and return to the previous one — restores old frame.</div>
+  <div class="legend">
+    <div class="leg"><div class="swatch" style="background:#f59e0b"></div> Prop (arg / local var)</div>
+    <div class="leg"><div class="swatch" style="background:#ef4444"></div> Return address</div>
+    <div class="leg"><div class="swatch" style="background:#a855f7"></div> Saved frame pointer (old RBP)</div>
+  </div>
+</div>
+
+<script>
+let frames = [{ name: 'main', items: [] }];
+let active = 0;
+let propN = 0;
+
+function getInp() {
+  const v = document.getElementById('inp').value.trim();
+  document.getElementById('inp').value = '';
+  return v;
+}
+
+function render() {
+  const stage = document.getElementById('stage');
+  stage.innerHTML = '';
+  frames.forEach((f, fi) => {
+    const col = document.createElement('div');
+    col.className = 'frame-col' + (fi === active ? '' : ' inactive');
+
+    const lbl = document.createElement('div');
+    lbl.className = 'frame-label';
+    lbl.textContent = f.name + (fi === active ? ' ◀ active' : '');
+    col.appendChild(lbl);
+
+    const box = document.createElement('div');
+    box.className = 'frame-box';
+    f.items.forEach(it => {
+      const d = document.createElement('div');
+      d.className = 'item item-' + it.type;
+      d.textContent = it.label;
+      box.appendChild(d);
+    });
+    col.appendChild(box);
+    stage.appendChild(col);
+  });
+  document.getElementById('rip').textContent = 'RIP: ' + frames[active].name;
+}
+
+function info(t) {
+  const el = document.getElementById('info');
+  el.style.opacity = 0;
+  setTimeout(() => { el.textContent = t; el.style.opacity = 1; }, 160);
+}
+
+function doPush() {
+  const label = getInp() || ('prop_' + (++propN));
+  frames[active].items.push({ label, type: 'prop' });
+  render();
+  info('📦 "' + label + '" pushed onto ' + frames[active].name + '. Lives here as a local var or argument until the scene ends.');
+}
+
+function doPop() {
+  const f = frames[active];
+  if (!f.items.length) { info('Nothing to pop from this scene.'); return; }
+  const r = f.items.pop();
+  render();
+  info('🗑 Popped "' + r.label + '" off ' + f.name + '. Gone — stack pointer moved back up.');
+}
+
+function doClear() {
+  frames[active].items = [];
+  render();
+  info('🧹 Cleared all props from ' + frames[active].name + '.');
+}
+
+function doCall() {
+  const sceneName = getInp() || ('scene_' + String.fromCharCode(64 + frames.length));
+  frames[active].items.push({ label: '↩ return addr', type: 'ret' });
+  frames[active].items.push({ label: '📐 saved RBP',   type: 'saved' });
+  frames.push({ name: sceneName, items: [] });
+  active = frames.length - 1;
+  render();
+  info('📞 CALL → pushed return address + saved RBP into ' + frames[active-1].name + '. New scene "' + sceneName + '" is now active.');
+}
+
+function doRet() {
+  if (active === 0) { info('Already at main() — nowhere to return to.'); return; }
+  const leaving = frames[active].name;
+  frames.pop();
+  active = frames.length - 1;
+  const f = frames[active];
+  while (f.items.length && (f.items[f.items.length-1].type === 'saved' || f.items[f.items.length-1].type === 'ret')) {
+    f.items.pop();
+  }
+  render();
+  info('🔙 RET → closed "' + leaving + '". Restored old RBP + jumped back via return address. Back in ' + frames[active].name + '.');
+}
+
+render();
+</script>
+</body>
+</html>
