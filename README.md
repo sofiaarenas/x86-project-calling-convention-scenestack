@@ -63,10 +63,11 @@ Behind the scenes, this happens:
 
 So the stack grows.
 
-### What the CPU actually does:
-push rbp        ; save caller’s frame pointer
-mov rbp, rsp    ; set up new frame (mark top of this frame)
-sub rsp, 32     ; allocate space for local variables
+What the CPU actually does:
+
+- push rbp        ; save caller’s frame pointer
+- mov rbp, rsp    ; set up new frame (mark top of this frame)
+- sub rsp, 32     ; allocate space for local variables
 
 ---
 
@@ -82,8 +83,8 @@ What happens:
 
 So the stack shrinks.
 
-leave           ; equivalent to: mov rsp, rbp + pop rbp
-ret             ; pop return address → jump back to caller
+- leave           ; equivalent to: mov rsp, rbp + pop rbp
+- ret             ; pop return address → jump back to caller
 
 ---
 
